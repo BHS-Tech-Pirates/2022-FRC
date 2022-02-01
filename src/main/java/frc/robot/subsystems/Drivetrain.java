@@ -8,14 +8,13 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj.motorcontrol.PWMSparkMax;
 
 public class Drivetrain extends SubsystemBase {
-  /** Creates a new Drivetrain. */
-  public Drivetrain() {
+    /** Creates a new Drivetrain. */
+    public Drivetrain() {
 
-    
-  }
+    }
 
-  @Override
-  public void periodic() {
-    // This method will be called once per scheduler run
-  }
+    @Override
+    public void periodic() {
+        // This method will be called once per scheduler run
+    }
 }
