@@ -4,7 +4,7 @@ package frc.robot;
 import edu.wpi.first.wpilibj.motorcontrol.MotorController;
 import edu.wpi.first.wpilibj.motorcontrol.PWMSparkMax;
 //control systems
-import edu.wpi.first.wpilibj.Joystick;
+import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.TimedRobot;
 //drive classes
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
@@ -22,14 +22,13 @@ import edu.wpi.first.wpilibj.Timer;
  */
 public class Robot extends TimedRobot {
 
-    private DifferentialDrive BHSBot; // DifferentialDrive is a drivetrain class
-    private Joystick leftStick; // Left joystick
-    private Joystick rightStick; // Right joystick
-
-    private final Timer timer = new Timer();
-
     private final MotorController leftMotor = new PWMSparkMax(0);// PWM0
     private final MotorController rightMotor = new PWMSparkMax(1);// PWM1
+
+    private final DifferentialDrive BHSBot = new DifferentialDrive(leftMotor, rightMotor); // DifferentialDrive is a drivetrain class
+    private final XboxController controller = new XboxController(0);
+
+    private final Timer timer = new Timer();
 
     /**
      * This function is run when the robot is first started up and should be used
@@ -40,16 +39,12 @@ public class Robot extends TimedRobot {
     public void robotInit() {
         rightMotor.setInverted(true); // Change this to left if needed. One side needs to be inverted for functional
                                       // tank drive
-
-        BHSBot = new DifferentialDrive(leftMotor, rightMotor);
-        leftStick = new Joystick(0);
-        rightStick = new Joystick(1);
     }
 
     /**
      * This function is called every robot packet, no matter the mode. Use this for
      * items like
-     * diagnostics that you want ran during disabled, autonomous, teleoperated and
+     * diagnostics that you want ran jduring disabled, autonomous, teleoperated and
      * test.
      *
      * <p>
@@ -69,7 +64,7 @@ public class Robot extends TimedRobot {
      * the Java
      * SmartDashboard. If you prefer the LabVIEW Dashboard, remove all of the
      * chooser code and
-     * uncomment the getString line to get the auto name from the text box below the
+     * uncontrollerent the getString line to get the auto name from the text box below the
      * Gyro
      *
      * <p>
@@ -87,7 +82,7 @@ public class Robot extends TimedRobot {
 
     @Override
     public void autonomousPeriodic() {
-        // Drive for n seconds
+        //Drive for n seconds
         double n = 3.0;
         if (timer.get() < n) {
             BHSBot.tankDrive(0.25, 0.25);
@@ -103,7 +98,9 @@ public class Robot extends TimedRobot {
 
     @Override
     public void teleopPeriodic() {
-        BHSBot.tankDrive(leftStick.getY(), rightStick.getY());
+        //XboxController.getLeftY() = XboxController.getRawAxis(1)
+        //XboxController.getRightY() = XboxController.getRawAxis(5)
+        BHSBot.tankDrive(-controller.getRawAxis(1), -controller.getRawAxis(5));
     }
 
     @Override
