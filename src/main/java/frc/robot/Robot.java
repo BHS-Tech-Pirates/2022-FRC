@@ -3,12 +3,18 @@ package frc.robot;
 //motorcontrol classes
 import edu.wpi.first.wpilibj.motorcontrol.MotorController;
 import edu.wpi.first.wpilibj.motorcontrol.PWMSparkMax;
+import java.lang.Math;
+//import com.revrobotics.*;
+//import com.revrobotics.CANSparkMaxLowLevel.MotorType;
+
 //control systems
 import edu.wpi.first.wpilibj.XboxController;
+
 import edu.wpi.first.wpilibj.TimedRobot;
 //drive classes
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
 //timer classes
+
 import edu.wpi.first.wpilibj.Timer;
 
 /**
@@ -21,14 +27,18 @@ import edu.wpi.first.wpilibj.Timer;
  * project.
  */
 public class Robot extends TimedRobot {
-
-    private final MotorController leftMotor = new PWMSparkMax(0);// PWM0
+    private final MotorController leftMotor = new PWMSparkMax(0); // PWM0
     private final MotorController rightMotor = new PWMSparkMax(1);// PWM1
+    // private final CANSparkMax LeftCamMotor = new CANSparkMax(2, MotorType.kBrushed);
+
+
+
 
     private final DifferentialDrive BHSBot = new DifferentialDrive(leftMotor, rightMotor); // DifferentialDrive is a drivetrain class
     private final XboxController controller = new XboxController(0);
 
     private final Timer timer = new Timer();
+
 
     /**
      * This function is run when the robot is first started up and should be used
@@ -37,8 +47,10 @@ public class Robot extends TimedRobot {
      */
     @Override
     public void robotInit() {
-        rightMotor.setInverted(true); // Change this to left if needed. One side needs to be inverted for functional
-                                      // tank drive
+    leftMotor.setInverted(true);
+
+
+                           // tank drive
     }
 
     /**
@@ -83,24 +95,40 @@ public class Robot extends TimedRobot {
     @Override
     public void autonomousPeriodic() {
         //Drive for n seconds
-        double n = 3.0;
+        /*double n = 3.0;
         if (timer.get() < n) {
             BHSBot.tankDrive(0.25, 0.25);
         } else {
             BHSBot.stopMotor();
-        }
+        }*/
     }
 
     @Override
     public void teleopInit() {
 
     }
+    private boolean toggleState = false;
+    private boolean isPressed = false;
+    // private double leftStick =  controller.getRawAxis(1);
+    // private double rightStick = controller.getRawAxis(5);
 
     @Override
     public void teleopPeriodic() {
-        //XboxController.getLeftY() = XboxController.getRawAxis(1)
-        //XboxController.getRightY() = XboxController.getRawAxis(5)
-        BHSBot.tankDrive(-controller.getRawAxis(1), -controller.getRawAxis(5));
+        // leftStick =  controller.getRawAxis(1);
+        // rightStick = controller.getRawAxis(5);
+        isPressed = controller.getStartButtonPressed();
+        if(isPressed){
+            toggleState = !toggleState;
+            leftMotor.setInverted(!toggleState);
+            rightMotor.setInverted(toggleState);
+        }  
+        if (toggleState){
+            BHSBot.arcadeDrive(-controller.getRawAxis(1)   , -controller.getRawAxis(4), false);
+
+        }
+        else{
+            BHSBot.arcadeDrive(-controller.getRawAxis(1), controller.getRawAxis(4), false);
+        }
     }
 
     @Override
@@ -117,5 +145,8 @@ public class Robot extends TimedRobot {
 
     @Override
     public void testPeriodic() {
+       // LeftCamMotor.set(1);
+        leftMotor.set(1);
+        rightMotor.set(1);
     }
 }
