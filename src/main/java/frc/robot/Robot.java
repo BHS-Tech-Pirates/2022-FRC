@@ -3,9 +3,11 @@ package frc.robot;
 //motorcontrol classes
 import edu.wpi.first.wpilibj.motorcontrol.MotorController;
 import edu.wpi.first.wpilibj.motorcontrol.PWMSparkMax;
-import java.lang.Math;
+import edu.wpi.first.wpilibj.DigitalInput;
 //import com.revrobotics.*;
 //import com.revrobotics.CANSparkMaxLowLevel.MotorType;
+
+import javax.lang.model.util.ElementScanner6;
 
 //control systems
 import edu.wpi.first.wpilibj.XboxController;
@@ -31,14 +33,18 @@ public class Robot extends TimedRobot {
     private final MotorController rightMotor = new PWMSparkMax(1);// PWM1
     // private final CANSparkMax LeftCamMotor = new CANSparkMax(2, MotorType.kBrushed);
 
-
-
+    //Drive speed vars
+    private double speedAdjust = 0;
+    private final double TURBOSPEED = 1;
+    private final double SLOWSPEED = 3;
+    private final double MAINSPEED = 1.5;
 
     private final DifferentialDrive BHSBot = new DifferentialDrive(leftMotor, rightMotor); // DifferentialDrive is a drivetrain class
     private final XboxController controller = new XboxController(0);
 
     private final Timer timer = new Timer();
 
+    private DigitalInput input0 = new DigitalInput(0);
 
     /**
      * This function is run when the robot is first started up and should be used
@@ -95,12 +101,13 @@ public class Robot extends TimedRobot {
     @Override
     public void autonomousPeriodic() {
         //Drive for n seconds
-        /*double n = 3.0;
+        //System.out.println(timer.get());
+        double n = 2;
         if (timer.get() < n) {
-            BHSBot.tankDrive(0.25, 0.25);
+            BHSBot.arcadeDrive(0.25,0,false);
         } else {
             BHSBot.stopMotor();
-        }*/
+        }
     }
 
     @Override
@@ -114,20 +121,21 @@ public class Robot extends TimedRobot {
 
     @Override
     public void teleopPeriodic() {
-        // leftStick =  controller.getRawAxis(1);
-        // rightStick = controller.getRawAxis(5);
         isPressed = controller.getStartButtonPressed();
         if(isPressed){
             toggleState = !toggleState;
             leftMotor.setInverted(!toggleState);
             rightMotor.setInverted(toggleState);
-        }  
-        if (toggleState){
-            BHSBot.arcadeDrive(-controller.getRawAxis(1)   , -controller.getRawAxis(4), false);
-
-        }
-        else{
-            BHSBot.arcadeDrive(-controller.getRawAxis(1), controller.getRawAxis(4), false);
+        }if(controller.getLeftBumper()){
+            speedAdjust = TURBOSPEED;
+        }else if(controller.getRightBumper()){
+            speedAdjust = SLOWSPEED;
+        }else{
+            speedAdjust = MAINSPEED;
+        }if(toggleState){
+            BHSBot.arcadeDrive(-controller.getRawAxis(1)/speedAdjust,-controller.getRawAxis(0)/speedAdjust,false);
+        }else{
+            BHSBot.arcadeDrive(-controller.getRawAxis(1)/speedAdjust,controller.getRawAxis(0)/speedAdjust,false);
         }
     }
 
