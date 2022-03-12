@@ -4,13 +4,16 @@ package frc.robot;
 import edu.wpi.first.wpilibj.motorcontrol.MotorController;
 import edu.wpi.first.wpilibj.motorcontrol.PWMSparkMax;
 import edu.wpi.first.wpilibj.DigitalInput;
-//import com.revrobotics.*;
+//import com.revrobotics.*; 
 //import com.revrobotics.CANSparkMaxLowLevel.MotorType;
+import edu.wpi.first.wpilibj.DoubleSolenoid;
 
 import javax.lang.model.util.ElementScanner6;
 
 //control systems
 import edu.wpi.first.wpilibj.XboxController;
+import edu.wpi.first.wpilibj.Compressor;
+import edu.wpi.first.wpilibj.PneumaticsModuleType;
 
 import edu.wpi.first.wpilibj.TimedRobot;
 //drive classes
@@ -44,7 +47,11 @@ public class Robot extends TimedRobot {
 
     private final Timer timer = new Timer();
 
-    private DigitalInput input0 = new DigitalInput(0);
+
+    //Pnuematics 
+    private final Compressor comp = new Compressor(0,PneumaticsModuleType.CTREPCM);
+    private final DoubleSolenoid solenoid = new DoubleSolenoid(PneumaticsModuleType.CTREPCM, 0, 1);
+
 
     /**
      * This function is run when the robot is first started up and should be used
@@ -53,9 +60,13 @@ public class Robot extends TimedRobot {
      */
     @Override
     public void robotInit() {
-    leftMotor.setInverted(true);
-
-
+        leftMotor.setInverted(true);
+        
+            try {
+                comp.enableDigital();
+            } catch (Exception e) {
+                System.out.println("Check connections");
+            }
                            // tank drive
     }
 
@@ -136,6 +147,12 @@ public class Robot extends TimedRobot {
             BHSBot.arcadeDrive(-controller.getRawAxis(1)/speedAdjust,-controller.getRawAxis(0)/speedAdjust,false);
         }else{
             BHSBot.arcadeDrive(-controller.getRawAxis(1)/speedAdjust,controller.getRawAxis(0)/speedAdjust,false);
+        }
+
+        if(controller.getPOV() == 0){
+            solenoid.set(DoubleSolenoid.Value.kForward);
+        }else if(controller.getPOV() == 180){
+            solenoid.set(DoubleSolenoid.Value.kReverse);
         }
     }
 
