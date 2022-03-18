@@ -59,6 +59,9 @@ public class Robot extends TimedRobot {
     private final Compressor comp = new Compressor(0,PneumaticsModuleType.CTREPCM);
     private final DoubleSolenoid solenoid = new DoubleSolenoid(PneumaticsModuleType.CTREPCM, 0, 1); //Channel 0 and 1 on pnuematic controller
 
+    private final Compressor comp2 = new Compressor(0,PneumaticsModuleType.CTREPCM);
+    private final DoubleSolenoid solenoid2 = new DoubleSolenoid(PneumaticsModuleType.CTREPCM, 2, 3); //Channel 0 and 1 on pnuematic controller
+
 
     @Override
     public void robotInit() {
@@ -67,6 +70,7 @@ public class Robot extends TimedRobot {
         
             try {
                 comp.enableDigital();
+                comp2.enableDigital();
             } catch (Exception e) {
                 System.out.println("Check connections");
             }
@@ -199,6 +203,11 @@ public class Robot extends TimedRobot {
             solenoid.set(DoubleSolenoid.Value.kForward);
         }else if(controller.getPOV() == 180){
             solenoid.set(DoubleSolenoid.Value.kReverse);
+        }
+        if(controller.getAButton()){
+            solenoid2.set(DoubleSolenoid.Value.kForward);
+        }else if(controller.getBButton()){
+            solenoid2.set(DoubleSolenoid.Value.kReverse);
         }
     }
 
