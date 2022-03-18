@@ -8,7 +8,7 @@ import edu.wpi.first.wpilibj.DigitalInput;
 //import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 import edu.wpi.first.wpilibj.DoubleSolenoid;
 
-import javax.lang.model.util.ElementScanner6;
+import edu.wpi.first.wpilibj.Encoder;
 
 //control systems
 import edu.wpi.first.wpilibj.XboxController;
@@ -19,6 +19,7 @@ import edu.wpi.first.wpilibj.TimedRobot;
 //drive classes
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
 //timer classes
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 import edu.wpi.first.wpilibj.Timer;
 
@@ -32,42 +33,45 @@ import edu.wpi.first.wpilibj.Timer;
  * project.
  */
 public class Robot extends TimedRobot {
-    private final MotorController leftMotor = new PWMSparkMax(0); // PWM0
-    private final MotorController rightMotor = new PWMSparkMax(1);// PWM1
-    // private final CANSparkMax LeftCamMotor = new CANSparkMax(2, MotorType.kBrushed);
 
-    //Drive speed vars
+    //Drive motorrs
+    private final MotorController leftMotor = new PWMSparkMax(0); //PWM 0
+    private final MotorController rightMotor = new PWMSparkMax(1); //PWM 1
+
+    //Encoded motors & encoders
+    private Encoder encoder = new Encoder(2,3); //DIO pins 2 and 3
+    private Encoder encoder2 = new Encoder(4,5); //DIO pins 4 and5
+    private MotorController encodedMotor = new PWMSparkMax(2); //PWM 2
+    private MotorController encodedMotor2 = new PWMSparkMax(3); //PWM 3
+
+    //Speed vars
     private double speedAdjust = 0;
     private final double TURBOSPEED = 1;
     private final double SLOWSPEED = 3;
     private final double MAINSPEED = 1.5;
 
-    private final DifferentialDrive BHSBot = new DifferentialDrive(leftMotor, rightMotor); // DifferentialDrive is a drivetrain class
+    //Bot, controller, timer
+    private final DifferentialDrive BHSBot = new DifferentialDrive(leftMotor, rightMotor); 
     private final XboxController controller = new XboxController(0);
-
     private final Timer timer = new Timer();
-
 
     //Pnuematics 
     private final Compressor comp = new Compressor(0,PneumaticsModuleType.CTREPCM);
-    private final DoubleSolenoid solenoid = new DoubleSolenoid(PneumaticsModuleType.CTREPCM, 0, 1);
+    private final DoubleSolenoid solenoid = new DoubleSolenoid(PneumaticsModuleType.CTREPCM, 0, 1); //Channel 0 and 1 on pnuematic controller
 
 
-    /**
-     * This function is run when the robot is first started up and should be used
-     * for any
-     * initialization code.
-     */
     @Override
     public void robotInit() {
         leftMotor.setInverted(true);
+        encoder.reset();
         
             try {
                 comp.enableDigital();
             } catch (Exception e) {
                 System.out.println("Check connections");
             }
-                           // tank drive
+        encoder.setDistancePerPulse((Math.PI * 6) / 360.0);
+        encoder2.setDistancePerPulse((Math.PI * 6) / 360.0);
     }
 
     /**
@@ -123,32 +127,74 @@ public class Robot extends TimedRobot {
 
     @Override
     public void teleopInit() {
-
+        encoder.reset();
+        encoder2.reset();
     }
-    private boolean toggleState = false;
-    private boolean isPressed = false;
-    // private double leftStick =  controller.getRawAxis(1);
-    // private double rightStick = controller.getRawAxis(5);
+
+    private boolean startButtonState = false;
+    private boolean startButtonPressed = false;
+
+    private boolean SuckButtonState = false;
+    private boolean SuckButtonPressed = false;
+    private int leftStickAdjust = 1;
+
+    private boolean SpitButtonState = false;
+    private boolean rightStickPressed = false;
+    private int rightStickAdjust = 1;
 
     @Override
     public void teleopPeriodic() {
-        isPressed = controller.getStartButtonPressed();
-        if(isPressed){
-            toggleState = !toggleState;
-            leftMotor.setInverted(!toggleState);
-            rightMotor.setInverted(toggleState);
+        //Toggle status
+        startButtonPressed = controller.getStartButtonPressed();
+        SuckButtonPressed = controller.getLeftStickButtonPressed();
+        rightStickPressed = controller.getRightStickButtonPressed();
+        //Driving
+        if(startButtonPressed){
+            startButtonState = !startButtonState;
+            leftMotor.setInverted(!startButtonState);
+            rightMotor.setInverted(startButtonState);
         }if(controller.getLeftBumper()){
             speedAdjust = TURBOSPEED;
         }else if(controller.getRightBumper()){
             speedAdjust = SLOWSPEED;
         }else{
             speedAdjust = MAINSPEED;
-        }if(toggleState){
+        }if(startButtonState){
             BHSBot.arcadeDrive(-controller.getRawAxis(1)/speedAdjust,-controller.getRawAxis(0)/speedAdjust,false);
         }else{
             BHSBot.arcadeDrive(-controller.getRawAxis(1)/speedAdjust,controller.getRawAxis(0)/speedAdjust,false);
         }
+        //Sucking balls😳😳😳😳😳😳😳😳😳😳😳😳😳😳😳 
 
+        if(SuckButtonPressed){
+            SuckButtonState = !SuckButtonState;        
+        }
+        
+        if(rightStickPressed){
+            SpitButtonState = !SpitButtonState;
+        }
+
+        if(SpitButtonState != true){
+            if(SuckButtonState){
+                encodedMotor.set(1);
+                encodedMotor2.set(1);
+            }else{
+                encodedMotor.stopMotor();
+                encodedMotor2.stopMotor();
+            }
+        }
+        
+        //Spitting balls🤮🤮🤮🤮🤮🤮🤮🤮🤮🤮🤮🤮🤮🤮
+            if(SuckButtonState != true){
+                if(SuckButtonState){
+                    encodedMotor.set(-1);
+                    encodedMotor2.set(-1);
+                }else{
+                    encodedMotor.stopMotor();
+                    encodedMotor2.stopMotor();
+                }
+            }
+        //Pnuematics
         if(controller.getPOV() == 0){
             solenoid.set(DoubleSolenoid.Value.kForward);
         }else if(controller.getPOV() == 180){
@@ -170,8 +216,6 @@ public class Robot extends TimedRobot {
 
     @Override
     public void testPeriodic() {
-       // LeftCamMotor.set(1);
-        leftMotor.set(1);
-        rightMotor.set(1);
     }
+
 }
