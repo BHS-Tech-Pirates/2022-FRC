@@ -173,7 +173,7 @@ public class Robot extends TimedRobot {
         if(rightStickPressed){
             SpitButtonState = !SpitButtonState;
         }
-
+  
         if(SpitButtonState != true){
             if(SuckButtonState){
                 encodedMotor.set(1);
