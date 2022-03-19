@@ -1,5 +1,6 @@
 package frc.robot;
 
+import edu.wpi.first.cameraserver.CameraServer;
 //motorcontrol classes
 import edu.wpi.first.wpilibj.motorcontrol.MotorController;
 import edu.wpi.first.wpilibj.motorcontrol.PWMSparkMax;
@@ -18,8 +19,6 @@ import edu.wpi.first.wpilibj.TimedRobot;
 //drive classes
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
 //timer classes
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-
 import edu.wpi.first.wpilibj.Timer;
 
 /**
@@ -37,9 +36,9 @@ public class Robot extends TimedRobot {
     private final MotorController leftMotor = new PWMSparkMax(0); //PWM 0
     private final MotorController rightMotor = new PWMSparkMax(1); //PWM 1
 
-    //Encoded motors & encoders
-    private Encoder encoder = new Encoder(2,3); //DIO pins 2 and 3
-    private Encoder encoder2 = new Encoder(4,5); //DIO pins 4 and5
+    //Encoded motors & suckEncoders
+    private Encoder suckEncoder = new Encoder(0,1); //DIO pins 0 and 1
+    private Encoder conveyorEncoder = new Encoder(2,3); //DIO pins 2 and 3
     private MotorController encodedMotor = new PWMSparkMax(2); //PWM 2
     private MotorController encodedMotor2 = new PWMSparkMax(3); //PWM 3
 
@@ -56,25 +55,21 @@ public class Robot extends TimedRobot {
 
     //Pnuematics 
     private final Compressor comp = new Compressor(0,PneumaticsModuleType.CTREPCM);
-    private final DoubleSolenoid solenoid = new DoubleSolenoid(PneumaticsModuleType.CTREPCM, 0, 1); //Channel 0 and 1 on pnuematic controller
-
-    private final Compressor comp2 = new Compressor(0,PneumaticsModuleType.CTREPCM);
-    private final DoubleSolenoid solenoid2 = new DoubleSolenoid(PneumaticsModuleType.CTREPCM, 2, 3); //Channel 0 and 1 on pnuematic controller
-
+    private final DoubleSolenoid armSolenoid = new DoubleSolenoid(PneumaticsModuleType.CTREPCM, 0, 1); //Channel 0 and 1 on pnuematic controller
+    private final DoubleSolenoid bucketSolenoid = new DoubleSolenoid(PneumaticsModuleType.CTREPCM, 2, 3); //Channel 0 and 1 on pnuematic controller
 
     @Override
     public void robotInit() {
+        CameraServer.startAutomaticCapture();
         leftMotor.setInverted(true);
-        encoder.reset();
-        
+        suckEncoder.reset();
             try {
                 comp.enableDigital();
-                comp2.enableDigital();
             } catch (Exception e) {
                 System.out.println("Check connections");
             }
-        encoder.setDistancePerPulse((Math.PI * 6) / 360.0);
-        encoder2.setDistancePerPulse((Math.PI * 6) / 360.0);
+        suckEncoder.setDistancePerPulse((Math.PI * 6) / 360.0);
+        conveyorEncoder.setDistancePerPulse((Math.PI * 6) / 360.0);
     }
 
     /**
@@ -88,6 +83,7 @@ public class Robot extends TimedRobot {
      * and
      * SmartDashboard integrated updating.
      */
+
     @Override
     public void robotPeriodic() {
 
@@ -130,8 +126,8 @@ public class Robot extends TimedRobot {
 
     @Override
     public void teleopInit() {
-        encoder.reset();
-        encoder2.reset();
+        suckEncoder.reset();
+        conveyorEncoder.reset();
     }
 
     private boolean startButtonState = false;
@@ -139,11 +135,9 @@ public class Robot extends TimedRobot {
 
     private boolean SuckButtonState = false;
     private boolean SuckButtonPressed = false;
-    private int leftStickAdjust = 1;
 
     private boolean SpitButtonState = false;
     private boolean rightStickPressed = false;
-    private int rightStickAdjust = 1;
 
     @Override
     public void teleopPeriodic() {
@@ -151,12 +145,20 @@ public class Robot extends TimedRobot {
         startButtonPressed = controller.getStartButtonPressed();
         SuckButtonPressed = controller.getLeftStickButtonPressed();
         rightStickPressed = controller.getRightStickButtonPressed();
-        //Driving
+        //Toggle buttons
         if(startButtonPressed){
             startButtonState = !startButtonState;
             leftMotor.setInverted(!startButtonState);
             rightMotor.setInverted(startButtonState);
-        }if(controller.getLeftBumper()){
+        }
+        if(SuckButtonPressed){
+            SuckButtonState = !SuckButtonState;        
+        }
+        if(rightStickPressed){
+            SpitButtonState = !SpitButtonState;
+        }
+        //Driving
+        if(controller.getLeftBumper()){
             speedAdjust = TURBOSPEED;
         }else if(controller.getRightBumper()){
             speedAdjust = SLOWSPEED;
@@ -168,15 +170,6 @@ public class Robot extends TimedRobot {
             BHSBot.arcadeDrive(-controller.getRawAxis(1)/speedAdjust,controller.getRawAxis(0)/speedAdjust,false);
         }
         //Sucking balls😳😳😳😳😳😳😳😳😳😳😳😳😳😳😳 
-
-        if(SuckButtonPressed){
-            SuckButtonState = !SuckButtonState;        
-        }
-        
-        if(rightStickPressed){
-            SpitButtonState = !SpitButtonState;
-        }
-  
         if(SpitButtonState != true){
             if(SuckButtonState){
                 encodedMotor.set(1);
@@ -186,7 +179,6 @@ public class Robot extends TimedRobot {
                 encodedMotor2.stopMotor();
             }
         }
-        
         //Spitting balls🤮🤮🤮🤮🤮🤮🤮🤮🤮🤮🤮🤮🤮🤮
             if(SuckButtonState != true){
                 if(SuckButtonState){
@@ -199,14 +191,14 @@ public class Robot extends TimedRobot {
             }
         //Pnuematics
         if(controller.getPOV() == 0){
-            solenoid.set(DoubleSolenoid.Value.kForward);
+            armSolenoid.set(DoubleSolenoid.Value.kForward);
         }else if(controller.getPOV() == 180){
-            solenoid.set(DoubleSolenoid.Value.kReverse);
+            armSolenoid.set(DoubleSolenoid.Value.kReverse);
         }
         if(controller.getAButton()){
-            solenoid2.set(DoubleSolenoid.Value.kForward);
+            bucketSolenoid.set(DoubleSolenoid.Value.kForward);
         }else if(controller.getBButton()){
-            solenoid2.set(DoubleSolenoid.Value.kReverse);
+            bucketSolenoid.set(DoubleSolenoid.Value.kReverse);
         }
     }
 
