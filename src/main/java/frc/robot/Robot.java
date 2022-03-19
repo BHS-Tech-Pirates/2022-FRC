@@ -3,7 +3,6 @@ package frc.robot;
 //motorcontrol classes
 import edu.wpi.first.wpilibj.motorcontrol.MotorController;
 import edu.wpi.first.wpilibj.motorcontrol.PWMSparkMax;
-import edu.wpi.first.wpilibj.DigitalInput;
 //import com.revrobotics.*; 
 //import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 import edu.wpi.first.wpilibj.DoubleSolenoid;
