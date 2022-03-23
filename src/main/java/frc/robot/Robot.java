@@ -14,12 +14,14 @@ import edu.wpi.first.wpilibj.Encoder;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.Compressor;
 import edu.wpi.first.wpilibj.PneumaticsModuleType;
-
+import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.TimedRobot;
 //drive classes
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
 //timer classes
 import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.AnalogInput;
+
 
 /**
  * The VM is configured to automatically run this class, and to call the
@@ -57,7 +59,12 @@ public class Robot extends TimedRobot {
     private final Compressor comp = new Compressor(0,PneumaticsModuleType.CTREPCM);
     private final DoubleSolenoid armSolenoid = new DoubleSolenoid(PneumaticsModuleType.CTREPCM, 0, 1); //Channel 0 and 1 on pnuematic controller
     private final DoubleSolenoid bucketSolenoid = new DoubleSolenoid(PneumaticsModuleType.CTREPCM, 2, 3); //Channel 0 and 1 on pnuematic controller
+    private final DoubleSolenoid pusherSolenoid = new DoubleSolenoid(PneumaticsModuleType.CTREPCM, 4, 5); //Channel 4 and 5 on pnuematic controller
 
+    private final AnalogInput ultrasonic = new AnalogInput(0);
+
+    double ultrasonicVSF = 0;
+    int ultrasonicValue = 0;
     @Override
     public void robotInit() {
         CameraServer.startAutomaticCapture();
@@ -70,6 +77,8 @@ public class Robot extends TimedRobot {
             }
         suckEncoder.setDistancePerPulse((Math.PI * 6) / 360.0);
         conveyorEncoder.setDistancePerPulse((Math.PI * 6) / 360.0);
+        ultrasonicVSF = 5/RobotController.getVoltage5V();
+
     }
 
     /**
@@ -83,10 +92,21 @@ public class Robot extends TimedRobot {
      * and
      * SmartDashboard integrated updating.
      */
-
+    double currentDistanceInches = 0;
+    double desiredTime = 0;
     @Override
     public void robotPeriodic() {
-
+          //ultrasonicValue = ultrasonic.getValue();
+          currentDistanceInches = ultrasonicValue * ultrasonicVSF * 0.0492;
+          /* if(currentDistanceInches < 14){
+               desiredTime = timer.get() + 2;
+               pusherSolenoid.set(DoubleSolenoid.Value.kForward);
+               while(timer.get()<desiredTime){
+                   
+               }
+               pusherSolenoid.set(DoubleSolenoid.Value.kReverse);
+           }*/
+           System.out.println(currentDistanceInches);
     }
 
     /**
