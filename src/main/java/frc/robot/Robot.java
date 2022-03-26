@@ -14,13 +14,11 @@ import edu.wpi.first.wpilibj.Encoder;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.Compressor;
 import edu.wpi.first.wpilibj.PneumaticsModuleType;
-import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.TimedRobot;
 //drive classes
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
 //timer classes
 import edu.wpi.first.wpilibj.Timer;
-import edu.wpi.first.wpilibj.AnalogInput;
 
 
 /**
@@ -41,8 +39,8 @@ public class Robot extends TimedRobot {
     //Encoded motors & suckEncoders
     private Encoder suckEncoder = new Encoder(0,1); //DIO pins 0 and 1
     private Encoder conveyorEncoder = new Encoder(2,3); //DIO pins 2 and 3
-    private MotorController encodedMotor = new PWMSparkMax(2); //PWM 2
-    private MotorController encodedMotor2 = new PWMSparkMax(3); //PWM 3
+    private MotorController suckMotor = new PWMSparkMax(2); //PWM 2
+    private MotorController conveyorMotor = new PWMSparkMax(3); //PWM 3
 
     //Speed vars
     private double speedAdjust = 0;
@@ -61,10 +59,6 @@ public class Robot extends TimedRobot {
     private final DoubleSolenoid bucketSolenoid = new DoubleSolenoid(PneumaticsModuleType.CTREPCM, 2, 3); //Channel 0 and 1 on pnuematic controller
     private final DoubleSolenoid pusherSolenoid = new DoubleSolenoid(PneumaticsModuleType.CTREPCM, 4, 5); //Channel 4 and 5 on pnuematic controller
 
-    private final AnalogInput ultrasonic = new AnalogInput(0);
-
-    double ultrasonicVSF = 0;
-    int ultrasonicValue = 0;
     @Override
     public void robotInit() {
         CameraServer.startAutomaticCapture();
@@ -77,8 +71,6 @@ public class Robot extends TimedRobot {
             }
         suckEncoder.setDistancePerPulse((Math.PI * 6) / 360.0);
         conveyorEncoder.setDistancePerPulse((Math.PI * 6) / 360.0);
-        ultrasonicVSF = 5/RobotController.getVoltage5V();
-
     }
 
     /**
@@ -92,21 +84,9 @@ public class Robot extends TimedRobot {
      * and
      * SmartDashboard integrated updating.
      */
-    double currentDistanceInches = 0;
-    double desiredTime = 0;
     @Override
     public void robotPeriodic() {
-          //ultrasonicValue = ultrasonic.getValue();
-          currentDistanceInches = ultrasonicValue * ultrasonicVSF * 0.0492;
-          /* if(currentDistanceInches < 14){
-               desiredTime = timer.get() + 2;
-               pusherSolenoid.set(DoubleSolenoid.Value.kForward);
-               while(timer.get()<desiredTime){
-                   
-               }
-               pusherSolenoid.set(DoubleSolenoid.Value.kReverse);
-           }*/
-           System.out.println(currentDistanceInches);
+
     }
 
     /**
@@ -153,29 +133,29 @@ public class Robot extends TimedRobot {
     private boolean startButtonState = false;
     private boolean startButtonPressed = false;
 
-    private boolean SuckButtonState = false;
-    private boolean SuckButtonPressed = false;
+    private boolean suckButtonState = false;
+    private boolean suckButtonPressed = false;
 
-    private boolean SpitButtonState = false;
-    private boolean rightStickPressed = false;
+    private boolean spitButtonStated = false;
+    private boolean spitButtonPressed = false;
 
     @Override
     public void teleopPeriodic() {
         //Toggle status
         startButtonPressed = controller.getStartButtonPressed();
-        SuckButtonPressed = controller.getLeftStickButtonPressed();
-        rightStickPressed = controller.getRightStickButtonPressed();
+        suckButtonPressed = controller.getLeftStickButtonPressed();
+        spitButtonPressed = controller.getRightStickButtonPressed();
         //Toggle buttons
         if(startButtonPressed){
             startButtonState = !startButtonState;
             leftMotor.setInverted(!startButtonState);
             rightMotor.setInverted(startButtonState);
         }
-        if(SuckButtonPressed){
-            SuckButtonState = !SuckButtonState;        
+        if(suckButtonPressed){
+            suckButtonState = !suckButtonState;        
         }
-        if(rightStickPressed){
-            SpitButtonState = !SpitButtonState;
+        if(spitButtonPressed){
+            spitButtonStated = !spitButtonStated;
         }
         //Driving
         if(controller.getLeftBumper()){
@@ -190,23 +170,23 @@ public class Robot extends TimedRobot {
             BHSBot.arcadeDrive(-controller.getRawAxis(1)/speedAdjust,controller.getRawAxis(0)/speedAdjust,false);
         }
         //Sucking balls😳😳😳😳😳😳😳😳😳😳😳😳😳😳😳 
-        if(SpitButtonState != true){
-            if(SuckButtonState){
-                encodedMotor.set(1);
-                encodedMotor2.set(1);
+        if(spitButtonStated != true){
+            if(suckButtonState){
+                suckMotor.set(1);
+                conveyorMotor.set(1);
             }else{
-                encodedMotor.stopMotor();
-                encodedMotor2.stopMotor();
+                suckMotor.stopMotor();
+                conveyorMotor.stopMotor();
             }
         }
         //Spitting balls🤮🤮🤮🤮🤮🤮🤮🤮🤮🤮🤮🤮🤮🤮
-            if(SuckButtonState != true){
-                if(SuckButtonState){
-                    encodedMotor.set(-1);
-                    encodedMotor2.set(-1);
+            if(suckButtonState != true){
+                if(suckButtonState){
+                    suckMotor.set(-1);
+                    conveyorMotor.set(-1);
                 }else{
-                    encodedMotor.stopMotor();
-                    encodedMotor2.stopMotor();
+                    suckMotor.stopMotor();
+                    conveyorMotor.stopMotor();
                 }
             }
         //Pnuematics
@@ -219,6 +199,11 @@ public class Robot extends TimedRobot {
             bucketSolenoid.set(DoubleSolenoid.Value.kForward);
         }else if(controller.getBButton()){
             bucketSolenoid.set(DoubleSolenoid.Value.kReverse);
+        }
+        if(controller.getXButton()){
+            pusherSolenoid.set(DoubleSolenoid.Value.kForward);
+        }else if(controller.getBButton()){
+            pusherSolenoid.set(DoubleSolenoid.Value.kReverse);
         }
     }
 
