@@ -9,6 +9,8 @@ import edu.wpi.first.wpilibj.motorcontrol.PWMSparkMax;
 import edu.wpi.first.wpilibj.DoubleSolenoid;
 
 import edu.wpi.first.wpilibj.Encoder;
+import edu.wpi.first.wpilibj.DigitalOutput;
+import edu.wpi.first.wpilibj.AnalogInput;
 
 //control systems
 import edu.wpi.first.wpilibj.XboxController;
@@ -36,9 +38,13 @@ public class Robot extends TimedRobot {
     private final MotorController leftMotor = new PWMSparkMax(0); //PWM 0
     private final MotorController rightMotor = new PWMSparkMax(1); //PWM 1
 
+    private final AnalogInput photoResistor  = new AnalogInput(0);
+    private final DigitalOutput laser = new DigitalOutput(9);
+
     //Encoded motors & suckEncoders
     private Encoder suckEncoder = new Encoder(0,1); //DIO pins 0 and 1
     private Encoder conveyorEncoder = new Encoder(2,3); //DIO pins 2 and 3
+
     private MotorController suckMotor = new PWMSparkMax(2); //PWM 2
     private MotorController conveyorMotor = new PWMSparkMax(3); //PWM 3
 
@@ -86,7 +92,8 @@ public class Robot extends TimedRobot {
      */
     @Override
     public void robotPeriodic() {
-
+        laser.set(true);
+        System.out.println(photoResistor.getValue());
     }
 
     /**
@@ -190,7 +197,7 @@ public class Robot extends TimedRobot {
                 }
             }
         //Pnuematics
-        if(controller.getPOV() == 0){
+         if(controller.getPOV() == 0){
             armSolenoid.set(DoubleSolenoid.Value.kForward);
         }else if(controller.getPOV() == 180){
             armSolenoid.set(DoubleSolenoid.Value.kReverse);
